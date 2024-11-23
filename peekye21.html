@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตรวจสอบรายชื่อผู้ผ่านการคัดเลือกพี่ค่ายเปลวเทียนสู่ฝันครั้งที่ 21</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background-image: url('https://cdn.pixabay.com/photo/2016/03/26/22/13/candlelights-1281563_1280.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            height: 100vh;
+        }
+        .content-wrapper {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container my-5">
+        <div class="text-center content-wrapper mx-auto" style="max-width: 600px;">
+            <img src="https://lh5.googleusercontent.com/d/1XZ0nSdcFr3XPyvdMeancbb8wJ4X7QXI4" alt="KPK4 Logo" class="img-fluid mb-4" style="max-width: 150px;">
+            <h1 class="mb-4">ตรวจสอบรายชื่อผู้ผ่านการคัดเลือกพี่ค่ายเปลวเทียนสู่ฝันครั้งที่ 21</h1>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="studentId" placeholder="กรอกรหัสนิสิต" required>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary w-100" onclick="checkSelection()">ตรวจสอบ</button>
+                    </div>
+                </div>
+            </div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('studentId').addEventListener('keydown', function(event) {
+            if (event.key === ' ') {
+                event.preventDefault();
+            }
+        });
+
+        async function checkSelection() {
+            const studentId = document.getElementById('studentId').value;
+            const apiUrl = 'https://script.google.com/macros/s/AKfycbwXdolfp-NyDGLN7-_2zPZwKDBKte5y4bCbjl5ZxNlSjy6xXFOXQv-idtO970ppIi_VYw/exec?studentId=' + studentId;
+
+            Swal.fire({
+                title: 'กำลังโหลดข้อมูล...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                Swal.close();
+
+                if (data.status === "ผ่านการคัดเลือก") {
+                    Swal.fire({
+                        title: 'ยินดีด้วย คุณผ่านการคัดเลือกให้เป็นพี่พี่ค่ายเปลวเทียนสู่ฝันครั้งที่ 21',
+                        html: `
+                            <p><strong>ชื่อ-นามสกุล:</strong> ${data.name}</p>
+                            <p><strong>ชื่อเล่น:</strong> ${data.nickname}</p>
+                            <p><strong>คณะ:</strong> ${data.faculty}</p>
+                            <p><strong>สายงานที่ผ่านการคัดเลือก:</strong> ${data.syyarn}</p>
+                        `,
+                        icon: 'success',
+                        confirmButtonText: 'ยืนยันสิทธิ์ (Google form)',
+                        confirmButtonColor: '#3085d6',
+                        showCloseButton: true,
+                         didOpen: () => {
+                            confetti({
+                                particleCount: 150,
+                                spread: 100,
+                                origin: { y: 0.3 },
+                                zIndex: 9999
+                            });
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.open(data.confirmationLink, '_blank');
+                        }
+                    });
+                } else if (data.status === "ไม่ผ่าน") {
+                    Swal.fire({
+                        title: 'ขออภัย คุณไม่ผ่านการคัดเลือกน้องค่าย KPK4',
+                        icon: 'error',
+                        confirmButtonText: 'ปิด',
+                        confirmButtonColor: '#d33',
+                        showCloseButton: true
+                    });
+                } else if (data.status === "สำรอง") {
+                    Swal.fire({
+                        title: 'สำรองน้องค่าย KPK4',
+                        html: `
+                            <p><strong>ชื่อ-นามสกุล:</strong> ${data.name}</p>
+                            <p><strong>ชื่อเล่น:</strong> ${data.nickname}</p>
+                            <p><strong>โรงเรียน:</strong> ${data.school}</p>
+                            <p><strong>จังหวัด:</strong> ${data.province}</p>
+                        `,
+                        icon: 'warning',
+                        confirmButtonText: 'ปิด',
+                        confirmButtonColor: '#f39c12',
+                        showCloseButton: true
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'ไม่พบข้อมูล',
+                        icon: 'warning',
+                        confirmButtonText: 'ปิด',
+                        confirmButtonColor: '#f39c12',
+                        showCloseButton: true
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'ไม่ได้เชื่อมต่อกับฐานข้อมูล',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'ปิด',
+                    confirmButtonColor: '#d33',
+                    showCloseButton: true
+                });
+            }
+        }
+    </script>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+</body>
+</html>
